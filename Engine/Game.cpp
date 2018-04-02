@@ -50,7 +50,11 @@ Game::Game( MainWindow& wnd )
 	} );
 	mrLister.Case<GreenTrait,BlueTrait>( []( Box& g,Box& b )
 	{
-		b.MarkForDeath();
+		g.MarkForDeath();
+	} );
+	mrLister.Case<YellowTrait,BlueTrait>( []( Box& y,Box& b )
+	{
+		b.AssumeColorTrait( y );
 	} );
 	world.SetContactListener( &mrLister );
 }

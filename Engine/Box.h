@@ -99,6 +99,10 @@ public:
 	{
 		return isDying;
 	}
+	void AssumeColorTrait( const Box& b )
+	{
+		pColorTrait = b.GetColorTrait().Clone();
+	}
 private:
 	static void Init()
 	{
