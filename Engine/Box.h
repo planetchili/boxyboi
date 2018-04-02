@@ -99,9 +99,9 @@ public:
 	{
 		return isDying;
 	}
-	void AssumeColorTrait( const Box& b )
+	void AssumeColorTrait( std::unique_ptr<ColorTrait> pct )
 	{
-		pColorTrait = b.GetColorTrait().Clone();
+		pColorTrait = std::move( pct );
 	}
 	std::vector<std::unique_ptr<Box>> Box::Split( b2World& world );
 private:

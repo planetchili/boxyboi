@@ -136,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Action.h" />
     <ClInclude Include="BodyPtr.h" />
     <ClInclude Include="Boundaries.h" />
     <ClInclude Include="Camera.h" />

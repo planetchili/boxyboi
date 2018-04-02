@@ -48,13 +48,20 @@ Game::Game( MainWindow& wnd )
 	{
 		r.MarkForDeath();
 	} );
-	mrLister.Case<GreenTrait,BlueTrait>( []( Box& g,Box& b )
+	mrLister.Case<YellowTrait,BlueTrait>( [this]( Box& y,Box& b )
 	{
-		g.MarkForDeath();
+		actionPtrs.push_back( std::make_unique<Tag>( y,b.GetColorTrait().Clone() ) );
 	} );
-	mrLister.Case<YellowTrait,BlueTrait>( []( Box& y,Box& b )
+	mrLister.Case<WhiteTrait,BlueTrait>( [this]( Box& w,Box& b )
 	{
-		b.AssumeColorTrait( y );
+		if( w.GetSize() > b.GetSize() && w.GetSize() > 0.2f )
+		{
+			actionPtrs.push_back( std::make_unique<Split>( w ) );
+		}
+		else if( b.GetSize() > 0.2f )
+		{
+			actionPtrs.push_back( std::make_unique<Split>( b ) );
+		}
 	} );
 	world.SetContactListener( &mrLister );
 }
@@ -71,20 +78,12 @@ void Game::UpdateModel()
 {
 	const float dt = ft.Mark();
 	world.Step( dt,8,3 );
-
-	while( !wnd.kbd.KeyIsEmpty() )
+	// process generated actions
+	for( auto& pa : actionPtrs )
 	{
-		auto e = wnd.kbd.ReadKey();
-		if( e.IsPress() && e.GetCode() == VK_SPACE )
-		{
-			auto children = boxPtrs.front()->Split( world );
-			boxPtrs.insert( boxPtrs.end(),
-				std::make_move_iterator( children.begin() ),
-				std::make_move_iterator( children.end() )
-			);
-		}
+		pa->Do( boxPtrs,world );
 	}
-
+	actionPtrs.clear();
 	// remove dying boxes
 	boxPtrs.erase(
 		std::remove_if( boxPtrs.begin(),boxPtrs.end(),std::mem_fn( &Box::IsDying ) ),
