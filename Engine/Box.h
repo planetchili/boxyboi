@@ -103,6 +103,7 @@ public:
 	{
 		pColorTrait = b.GetColorTrait().Clone();
 	}
+	std::vector<std::unique_ptr<Box>> Box::Split( b2World& world );
 private:
 	static void Init()
 	{

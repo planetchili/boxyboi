@@ -41,3 +41,24 @@ std::unique_ptr<Box> Box::Spawn( float size,const Boundaries& bounds,b2World& wo
 	
 	return std::make_unique<Box>( std::move( pColorTrait ),world,pos,size,ang,linVel,angVel );
 }
+
+std::vector<std::unique_ptr<Box>> Box::Split( b2World& world )
+{
+	std::vector<std::unique_ptr<Box>> boxes;
+	const Vec2 pos = GetPosition();
+	const float angle = GetAngle();
+	const Vec2 vel = GetVelocity();
+	const float angVel = GetAngularVelocity();
+	// base for rotation to calculate centers of children relative to parent center
+	const Vec2 base = (Vec2{ 0.5f,0.5f } * size) *= Mat2::Rotation( angle );
+	for( int i = 0; i < 4; i++ )
+	{
+		boxes.push_back( std::make_unique<Box>(
+			GetColorTrait().Clone(),world,
+			base * Mat2::Rotation( (float)i * PI / 2.0f ) + pos,
+			GetSize() / 2.0f,angle,vel,angVel
+		) );
+	}
+	MarkForDeath();
+	return boxes;
+}

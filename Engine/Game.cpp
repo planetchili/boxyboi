@@ -72,6 +72,19 @@ void Game::UpdateModel()
 	const float dt = ft.Mark();
 	world.Step( dt,8,3 );
 
+	while( !wnd.kbd.KeyIsEmpty() )
+	{
+		auto e = wnd.kbd.ReadKey();
+		if( e.IsPress() && e.GetCode() == VK_SPACE )
+		{
+			auto children = boxPtrs.front()->Split( world );
+			boxPtrs.insert( boxPtrs.end(),
+				std::make_move_iterator( children.begin() ),
+				std::make_move_iterator( children.end() )
+			);
+		}
+	}
+
 	// remove dying boxes
 	boxPtrs.erase(
 		std::remove_if( boxPtrs.begin(),boxPtrs.end(),std::mem_fn( &Box::IsDying ) ),
