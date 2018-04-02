@@ -91,6 +91,14 @@ public:
 	{
 		return *pColorTrait;
 	}
+	void MarkForDeath()
+	{
+		isDying = true;
+	}
+	bool IsDying() const
+	{
+		return isDying;
+	}
 private:
 	static void Init()
 	{
@@ -105,4 +113,5 @@ private:
 	float size;
 	BodyPtr pBody;
 	std::unique_ptr<ColorTrait> pColorTrait;
+	bool isDying = false;
 };

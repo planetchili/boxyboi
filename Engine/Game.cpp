@@ -59,6 +59,11 @@ Game::Game( MainWindow& wnd )
 
 				std::stringstream msg;
 				msg << "Collision between " << tid0.name() << " and " << tid1.name() << std::endl;
+				if( tid0 == tid1 )
+				{
+					msg << "*** KABOOOM! ***" << std::endl;
+					boxPtrs[0]->MarkForDeath();
+				}
 				OutputDebugStringA( msg.str().c_str() );
 			}
 		}
@@ -79,6 +84,12 @@ void Game::UpdateModel()
 {
 	const float dt = ft.Mark();
 	world.Step( dt,8,3 );
+
+	// remove dying boxes
+	boxPtrs.erase(
+		std::remove_if( boxPtrs.begin(),boxPtrs.end(),std::mem_fn( &Box::IsDying ) ),
+		boxPtrs.end()
+	);
 }
 
 void Game::ComposeFrame()
