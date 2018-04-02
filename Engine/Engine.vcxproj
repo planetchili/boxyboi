@@ -144,6 +144,7 @@
     <ClInclude Include="ChiliWin.h" />
     <ClInclude Include="Colors.h" />
     <ClInclude Include="Box.h" />
+    <ClInclude Include="ColorTraits.h" />
     <ClInclude Include="DefaultGeometryShader.h" />
     <ClInclude Include="DXErr.h" />
     <ClInclude Include="FrameTimer.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Mat2.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="PatternMatchingListener.h" />
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="PubeScreenTransformer.h" />
     <ClInclude Include="Rect.h" />

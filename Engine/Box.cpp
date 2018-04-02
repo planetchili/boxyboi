@@ -1,71 +1,8 @@
 #include "Box.h"
+#include "ColorTraits.h"
+
 IndexedTriangleList<Vec2> Box::model;
 
-
-class RedTrait : public Box::ColorTrait
-{
-public:
-	std::unique_ptr<ColorTrait> Clone() const override
-	{
-		return std::make_unique<RedTrait>();
-	}
-	Color GetColor() const override
-	{
-		return Colors::Red;
-	}
-};
-
-class GreenTrait : public Box::ColorTrait
-{
-public:
-	std::unique_ptr<ColorTrait> Clone() const override
-	{
-		return std::make_unique<GreenTrait>();
-	}
-	Color GetColor() const override
-	{
-		return Colors::Green;
-	}
-};
-
-class BlueTrait : public Box::ColorTrait
-{
-public:
-	std::unique_ptr<ColorTrait> Clone() const override
-	{
-		return std::make_unique<BlueTrait>();
-	}
-	Color GetColor() const override
-	{
-		return Colors::Blue;
-	}
-};
-
-class YellowTrait : public Box::ColorTrait
-{
-public:
-	std::unique_ptr<ColorTrait> Clone() const override
-	{
-		return std::make_unique<YellowTrait>();
-	}
-	Color GetColor() const override
-	{
-		return Colors::Yellow;
-	}
-};
-
-class WhiteTrait : public Box::ColorTrait
-{
-public:
-	std::unique_ptr<ColorTrait> Clone() const override
-	{
-		return std::make_unique<WhiteTrait>();
-	}
-	Color GetColor() const override
-	{
-		return Colors::White;
-	}
-};
 
 std::unique_ptr<Box> Box::Spawn( float size,const Boundaries& bounds,b2World& world,std::mt19937& rng )
 {

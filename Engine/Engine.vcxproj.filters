@@ -111,6 +111,12 @@
     <ClInclude Include="BodyPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PatternMatchingListener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorTraits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DXErr.cpp">
