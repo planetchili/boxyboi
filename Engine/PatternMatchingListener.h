@@ -4,6 +4,7 @@
 #include <functional>
 #include <unordered_map>
 #include <typeinfo>
+#include <type_traits>
 
 using TypePair = std::pair<
 	const std::type_info*,
@@ -37,6 +38,8 @@ public:
 	template<class T,class U,class F>
 	void Case( F f )
 	{
+		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
+		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
 		handlers[{&typeid(T),&typeid(U)}] = f;
 		handlers[{&typeid(U),&typeid(T)}] = std::bind(
 			f,std::placeholders::_2,std::placeholders::_1
@@ -45,11 +48,15 @@ public:
 	template<class T,class U>
 	bool HasCase() const
 	{
+		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
+		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
 		return handlers.count( { &typeid(T),&typeid(U) } ) > 0;
 	}
 	template<class T,class U>
 	void ClearCase()
 	{
+		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
+		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
 		return handlers.erase( {&typeid(T),&typeid(U)} );
 		return handlers.erase( {&typeid(U),&typeid(T)} );
 	}
