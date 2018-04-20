@@ -57,8 +57,8 @@ public:
 	{
 		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
 		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
-		return handlers.erase( {&typeid(T),&typeid(U)} );
-		return handlers.erase( {&typeid(U),&typeid(T)} );
+		handlers.erase( {&typeid(T),&typeid(U)} );
+		handlers.erase( {&typeid(U),&typeid(T)} );
 	}
 	template<class F>
 	void Default( F f )
