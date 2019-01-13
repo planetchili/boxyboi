@@ -52,6 +52,11 @@ public:
 		}
 		pBody->SetUserData( this );
 	}
+	std::unique_ptr<Box> Box::SpawnBoxy(const Boundaries& bounds, b2World& world, const Vec2& pos)
+	{
+		return std::make_unique<Box>(std::move(pColorTrait), world, pos, size / 4,
+			GetAngle(), GetVelocity(), GetAngularVelocity());
+	}
 	void Draw( Pipeline<SolidEffect>& pepe ) const
 	{
 		pepe.effect.vs.BindTranslation( GetPosition() );
@@ -91,6 +96,18 @@ public:
 	{
 		return *pColorTrait;
 	}
+	void MarkForDeletion()
+	{
+		isMarkedForDeletion = true;
+	}
+	bool IsMarkedForDeletion() const
+	{
+		return isMarkedForDeletion;
+	}
+	void UnMark()
+	{
+		isMarkedForDeletion = false;
+	}
 private:
 	static void Init()
 	{
@@ -105,4 +122,5 @@ private:
 	float size;
 	BodyPtr pBody;
 	std::unique_ptr<ColorTrait> pColorTrait;
+	bool isMarkedForDeletion = false;
 };
