@@ -34,6 +34,12 @@
 class Game
 {
 public:
+	enum class TraitsContact
+	{
+		RB,
+		BW,
+		YR
+	};
 	Game( class MainWindow& wnd );
 	Game( const Game& ) = delete;
 	Game& operator=( const Game& ) = delete;
@@ -58,5 +64,6 @@ private:
 	b2World world;
 	Boundaries bounds = Boundaries( world,boundarySize );
 	std::vector<std::unique_ptr<Box>> boxPtrs;
+
 	/********************************/
 };
