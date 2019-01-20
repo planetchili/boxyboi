@@ -52,11 +52,8 @@ public:
 		}
 		pBody->SetUserData( this );
 	}
-	std::unique_ptr<Box> Box::SpawnBoxy(const Boundaries& bounds, b2World& world, const Vec2& pos)
-	{
-		return std::make_unique<Box>(std::move(pColorTrait), world, pos, size / 4,
-			GetAngle(), GetVelocity(), GetAngularVelocity());
-	}
+	std::vector<std::unique_ptr<Box>> Box::SpawnBoxy(b2World& world);
+	static ColorTrait* CreateColorTrait(Color& c);
 	void Draw( Pipeline<SolidEffect>& pepe ) const
 	{
 		pepe.effect.vs.BindTranslation( GetPosition() );
@@ -80,6 +77,10 @@ public:
 	{
 		return (Vec2)pBody->GetPosition();
 	}
+	Vec2 GetWorldPoint(Vec2 offset) const
+	{
+		return (Vec2)pBody->GetWorldPoint((b2Vec2)offset);
+	}
 	float GetAngularVelocity() const
 	{
 		return pBody->GetAngularVelocity();
@@ -96,17 +97,29 @@ public:
 	{
 		return *pColorTrait;
 	}
-	void MarkForDeletion()
+	b2World& GetWorld() const
 	{
-		isMarkedForDeletion = true;
+		return *pBody->GetWorld();
 	}
-	bool IsMarkedForDeletion() const
+	void SetColorTrait(std::unique_ptr<ColorTrait> _pColorTrait)
 	{
-		return isMarkedForDeletion;
+		pColorTrait = std::move(_pColorTrait);
 	}
-	void UnMark()
+	void AddFlag(int flag)
 	{
-		isMarkedForDeletion = false;
+		flags |= flag;
+	}
+	bool HasFlag(int flag) const
+	{
+		return ((flags & flag) == flag);
+	}
+	bool HasAnyFlag() const
+	{
+		return flags != 0;
+	}
+	int GetFlags() const
+	{
+		return flags;
 	}
 private:
 	static void Init()
@@ -123,4 +136,6 @@ private:
 	BodyPtr pBody;
 	std::unique_ptr<ColorTrait> pColorTrait;
 	bool isMarkedForDeletion = false;
+	int flags = 0;
+
 };

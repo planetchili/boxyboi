@@ -39,6 +39,10 @@ public:
 	{
 		return Colors::Blue;
 	}
+	static std::unique_ptr<ColorTrait> CreateColorTrait()
+	{
+		return std::make_unique <BlueTrait>();
+	}
 };
 
 class YellowTrait : public Box::ColorTrait
@@ -66,6 +70,26 @@ public:
 		return Colors::White;
 	}
 };
+
+std::vector<std::unique_ptr<Box>> Box::SpawnBoxy(b2World& world)
+{
+	std::vector<std::unique_ptr<Box>> v;
+	Vec2 parent_pos = GetPosition();
+	Vec2 pos[4] = { parent_pos };
+
+	pos[0] = GetWorldPoint(Vec2(-0.25f*size, -0.25f*size));
+	pos[1] = GetWorldPoint(Vec2(0.25f*size, -0.25f*size));
+	pos[2] = GetWorldPoint(Vec2(-0.25f*size, 0.25f*size));
+	pos[3] = GetWorldPoint(Vec2(0.25f*size, 0.25f*size));
+	for (int i = 0; i < 4; i++)
+	{
+		auto pColorTraitBoxy = pColorTrait->Clone();
+		v.emplace_back(std::make_unique<Box>(std::move(pColorTraitBoxy),
+			world, pos[i], size*0.5f, GetAngle(), GetVelocity(), GetAngularVelocity()));
+	}
+	return v;
+}
+
 
 std::unique_ptr<Box> Box::Spawn( float size,const Boundaries& bounds,b2World& world,std::mt19937& rng )
 {

@@ -34,13 +34,25 @@ Game::Game( MainWindow& wnd )
 	world( { 0.0f,-0.5f } ),
 	pepe( gfx )
 {
+
+
 	pepe.effect.vs.cam.SetPos( { 0.0,0.0f } );
 	pepe.effect.vs.cam.SetZoom( 1.0f / boundarySize );
-
 	std::generate_n( std::back_inserter( boxPtrs ),nBoxes,[this]() {
 		return Box::Spawn( boxSize,bounds,world,rng );
 	} );
-
+	umap[Effects::BOX_COLOR] = [](Box** bptrs)
+	{
+		bptrs[0]->SetColorTrait(bptrs[1]->GetColorTrait().Clone());
+	};
+	umap[Effects::BOX_DESTROY] = [&](Box** bptrs)
+	{
+		const auto new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](const std::unique_ptr<Box>& boxPtr)
+		{
+			return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
+		});
+		boxPtrs.erase(new_end, boxPtrs.end());
+	};
 	class Listener : public b2ContactListener
 	{
 	public:
@@ -61,12 +73,15 @@ Game::Game( MainWindow& wnd )
 				msg << "Collision between " << tid0.name() << " and " << tid1.name() << std::endl;
 				if (tid0 == tid1)
 				{
-					//mark for deletion here
-					boxPtrs[0]->MarkForDeletion();
-					boxPtrs[1]->MarkForDeletion();
-					//doesn't matter which order, at least for now..
-					contact->GetFixtureA()->GetBody()->SetUserData(boxPtrs[0]);
-					contact->GetFixtureB()->GetBody()->SetUserData(boxPtrs[1]);
+					boxPtrs[0]->AddFlag((int)Effects::BOX_DESTROY);
+				}
+				if ((std::any_of(std::begin(boxPtrs), std::end(boxPtrs),
+					[](Box* bp) { return bp->GetColorTrait().GetColor() == Colors::Blue; })) &&
+					(std::any_of(std::begin(boxPtrs), std::end(boxPtrs),
+						[](Box* bp) { return bp->GetColorTrait().GetColor() == Colors::White; })))
+				{
+					boxPtrs[0]->AddFlag((int)Effects::BOX_COLOR);
+					boxPtrs[1]->AddFlag((int)Effects::BOX_COLOR);
 				}
 				OutputDebugStringA( msg.str().c_str() );
 			}
@@ -88,20 +103,7 @@ void Game::UpdateModel()
 {
 	const float dt = ft.Mark();
 	world.Step( dt,8,3 );
-
-	for (int i = 0; i < boxPtrs.size(); i++)
-	{
-		if (boxPtrs[i]->IsMarkedForDeletion())
-		{
-			boxPtrs.emplace_back(boxPtrs[i]->SpawnBoxy(bounds, world, boxPtrs[i]->GetPosition()));
-			boxPtrs[i]->UnMark();
-		}
-	}
-	const auto new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](const std::unique_ptr<Box>& boxPtr)
-	{
-		return boxPtr->IsMarkedForDeletion();
-	});
-	boxPtrs.erase(new_end, boxPtrs.end());
+	/* check for flags of each box here, and call an effect */
 }
 
 void Game::ComposeFrame()

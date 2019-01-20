@@ -30,16 +30,11 @@
 #include "Pipeline.h"
 #include "SolidEffect.h"
 #include <random>
-
+#include "Effects.h"
+#include <unordered_map>
 class Game
 {
 public:
-	enum class TraitsContact
-	{
-		RB,
-		BW,
-		YR
-	};
 	Game( class MainWindow& wnd );
 	Game( const Game& ) = delete;
 	Game& operator=( const Game& ) = delete;
@@ -64,6 +59,14 @@ private:
 	b2World world;
 	Boundaries bounds = Boundaries( world,boundarySize );
 	std::vector<std::unique_ptr<Box>> boxPtrs;
-
+	bool keyPressed = false;
 	/********************************/
+public:
+	enum class Effects
+	{
+		BOX_COLOR = 1,
+		BOX_DESTROY = 2,
+		BOX_SPLIT = 4,
+	};
+	std::unordered_map < Effects, std::function<void(Box**)> > umap;
 };
