@@ -28,6 +28,16 @@
 #include <iterator>
 #include <typeindex>
 
+struct PairHash
+{
+public:
+	template <typename T>
+	std::size_t operator()(const std::pair<T, T>& p) const
+	{
+		return std::hash<T>()(p.first) ^ std::hash<T>()(p.second);
+	}
+};
+
 Game::Game( MainWindow& wnd )
 	:
 	wnd( wnd ),
@@ -43,26 +53,27 @@ Game::Game( MainWindow& wnd )
 
 	class Listener : public b2ContactListener
 	{
-	private:
-		std::unordered_map <std::pair<std::type_index, std::type_index>, std::function<void(Box*, Box*)> > umap;
 	public:
-		void BeginContact( b2Contact* contact ) override
+		Listener()
 		{
-
 			umap[{typeid(YellowTrait), typeid(RedTrait)}] = [](Box* bptrA, Box* bptrB)
 			{
 				bptrA->AddFlag((int)Effects::BOX_SPLIT);
 			};
-
 			umap[{typeid(WhiteTrait), typeid(BlueTrait)}] = [](Box* bptrA, Box* bptrB)
 			{
 				bptrA->AddFlag((int)Effects::BOX_COLOR);
 			};
-			umap[{typeid(GreenTrait), typeid(Box::ColorTrait*)}] = [](Box* bptrA, Box* bptrB)
+			umap[{typeid(GreenTrait), typeid(WhiteTrait)}] = [](Box* bptrA, Box* bptrB)
 			{
-				bptrA->AddFlag((int)Effects::BOX_COLOR);
+				bptrA->AddFlag((int)Effects::BOX_DESTROY);
 			};
-
+		}
+	private:
+		std::unordered_map <std::pair<std::type_index, std::type_index>, std::function<void(Box*, Box*)>, PairHash> umap;
+	public:
+		void BeginContact( b2Contact* contact ) override
+		{
 			const b2Body* bodyPtrs[] = { contact->GetFixtureA()->GetBody(),contact->GetFixtureB()->GetBody() };
 			if( bodyPtrs[0]->GetType() == b2BodyType::b2_dynamicBody &&
 				bodyPtrs[1]->GetType() == b2BodyType::b2_dynamicBody )
@@ -113,9 +124,11 @@ void Game::UpdateModel()
 				return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
 			});
 			boxPtrs.erase(new_end, boxPtrs.end());
+			boxPtrs[i]->Reset();
 			break;
 		case Effects::BOX_COLOR:
 			boxPtrs[i]->SetColorTrait(std::make_unique<YellowTrait>());
+			boxPtrs[i]->Reset();
 			break;
 		case Effects::BOX_SPLIT:
 			if (boxPtrs[i]->GetSize() > 0.1f)
@@ -123,8 +136,10 @@ void Game::UpdateModel()
 				auto v = boxPtrs[i]->SpawnBoxy(boxPtrs[i]->GetWorld());
 				boxPtrs.insert(boxPtrs.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
 			}
+			boxPtrs[i]->Reset();
 			break;
 		default:
+			boxPtrs[i]->Reset();
 			break;
 		}
 	}
