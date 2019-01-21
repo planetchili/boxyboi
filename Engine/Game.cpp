@@ -26,6 +26,7 @@
 #include <typeinfo>
 #include <functional>
 #include <iterator>
+#include <typeindex>
 
 Game::Game( MainWindow& wnd )
 	:
@@ -34,30 +35,34 @@ Game::Game( MainWindow& wnd )
 	world( { 0.0f,-0.5f } ),
 	pepe( gfx )
 {
-
-
 	pepe.effect.vs.cam.SetPos( { 0.0,0.0f } );
 	pepe.effect.vs.cam.SetZoom( 1.0f / boundarySize );
 	std::generate_n( std::back_inserter( boxPtrs ),nBoxes,[this]() {
 		return Box::Spawn( boxSize,bounds,world,rng );
 	} );
-	umap[Effects::BOX_COLOR] = [](Box** bptrs)
-	{
-		bptrs[0]->SetColorTrait(bptrs[1]->GetColorTrait().Clone());
-	};
-	umap[Effects::BOX_DESTROY] = [&](Box** bptrs)
-	{
-		const auto new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](const std::unique_ptr<Box>& boxPtr)
-		{
-			return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
-		});
-		boxPtrs.erase(new_end, boxPtrs.end());
-	};
+
 	class Listener : public b2ContactListener
 	{
+	private:
+		std::unordered_map <std::pair<std::type_index, std::type_index>, std::function<void(Box*, Box*)> > umap;
 	public:
 		void BeginContact( b2Contact* contact ) override
 		{
+
+			umap[{typeid(YellowTrait), typeid(RedTrait)}] = [](Box* bptrA, Box* bptrB)
+			{
+				bptrA->AddFlag((int)Effects::BOX_SPLIT);
+			};
+
+			umap[{typeid(WhiteTrait), typeid(BlueTrait)}] = [](Box* bptrA, Box* bptrB)
+			{
+				bptrA->AddFlag((int)Effects::BOX_COLOR);
+			};
+			umap[{typeid(GreenTrait), typeid(Box::ColorTrait*)}] = [](Box* bptrA, Box* bptrB)
+			{
+				bptrA->AddFlag((int)Effects::BOX_COLOR);
+			};
+
 			const b2Body* bodyPtrs[] = { contact->GetFixtureA()->GetBody(),contact->GetFixtureB()->GetBody() };
 			if( bodyPtrs[0]->GetType() == b2BodyType::b2_dynamicBody &&
 				bodyPtrs[1]->GetType() == b2BodyType::b2_dynamicBody )
@@ -71,19 +76,12 @@ Game::Game( MainWindow& wnd )
 
 				std::stringstream msg;
 				msg << "Collision between " << tid0.name() << " and " << tid1.name() << std::endl;
-				if (tid0 == tid1)
-				{
-					boxPtrs[0]->AddFlag((int)Effects::BOX_DESTROY);
-				}
-				if ((std::any_of(std::begin(boxPtrs), std::end(boxPtrs),
-					[](Box* bp) { return bp->GetColorTrait().GetColor() == Colors::Blue; })) &&
-					(std::any_of(std::begin(boxPtrs), std::end(boxPtrs),
-						[](Box* bp) { return bp->GetColorTrait().GetColor() == Colors::White; })))
-				{
-					boxPtrs[0]->AddFlag((int)Effects::BOX_COLOR);
-					boxPtrs[1]->AddFlag((int)Effects::BOX_COLOR);
-				}
+
+				umap[{typeid(boxPtrs[0]->GetColorTrait()), typeid(boxPtrs[1]->GetColorTrait())}](boxPtrs[0], boxPtrs[1]);
+
 				OutputDebugStringA( msg.str().c_str() );
+				msg << "Flag set for boxPtrs[0] = " << boxPtrs[0]->GetFlags() << std::endl;
+				OutputDebugStringA(msg.str().c_str());
 			}
 		}
 	};
@@ -103,7 +101,33 @@ void Game::UpdateModel()
 {
 	const float dt = ft.Mark();
 	world.Step( dt,8,3 );
-	/* check for flags of each box here, and call an effect */
+
+	for (size_t i = 0; i < boxPtrs.size(); i++)
+	{
+		std::vector<std::unique_ptr<Box>>::iterator new_end;
+		switch (static_cast<Effects>(boxPtrs[i]->GetFlags()))
+		{
+		case Effects::BOX_DESTROY:
+			new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](std::unique_ptr<Box>& boxPtr)
+			{
+				return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
+			});
+			boxPtrs.erase(new_end, boxPtrs.end());
+			break;
+		case Effects::BOX_COLOR:
+			boxPtrs[i]->SetColorTrait(std::make_unique<YellowTrait>());
+			break;
+		case Effects::BOX_SPLIT:
+			if (boxPtrs[i]->GetSize() > 0.1f)
+			{
+				auto v = boxPtrs[i]->SpawnBoxy(boxPtrs[i]->GetWorld());
+				boxPtrs.insert(boxPtrs.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
+			}
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void Game::ComposeFrame()

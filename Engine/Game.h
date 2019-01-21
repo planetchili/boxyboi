@@ -68,5 +68,5 @@ public:
 		BOX_DESTROY = 2,
 		BOX_SPLIT = 4,
 	};
-	std::unordered_map < Effects, std::function<void(Box**)> > umap;
+	
 };

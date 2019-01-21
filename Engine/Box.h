@@ -121,6 +121,18 @@ public:
 	{
 		return flags;
 	}
+	void Collide()
+	{
+		hasCollided = true;
+	}
+	void Reset()
+	{
+		hasCollided = false;
+	}
+	bool HasCollided() const
+	{
+		return hasCollided;
+	}
 private:
 	static void Init()
 	{
@@ -137,5 +149,75 @@ private:
 	std::unique_ptr<ColorTrait> pColorTrait;
 	bool isMarkedForDeletion = false;
 	int flags = 0;
+	bool hasCollided = false;
 
+};
+
+class RedTrait : public Box::ColorTrait
+{
+public:
+	std::unique_ptr<ColorTrait> Clone() const override
+	{
+		return std::make_unique<RedTrait>();
+	}
+	Color GetColor() const override
+	{
+		return Colors::Red;
+	}
+};
+
+class GreenTrait : public Box::ColorTrait
+{
+public:
+	std::unique_ptr<ColorTrait> Clone() const override
+	{
+		return std::make_unique<GreenTrait>();
+	}
+	Color GetColor() const override
+	{
+		return Colors::Green;
+	}
+};
+
+class BlueTrait : public Box::ColorTrait
+{
+public:
+	std::unique_ptr<ColorTrait> Clone() const override
+	{
+		return std::make_unique<BlueTrait>();
+	}
+	Color GetColor() const override
+	{
+		return Colors::Blue;
+	}
+	static std::unique_ptr<ColorTrait> CreateColorTrait()
+	{
+		return std::make_unique <BlueTrait>();
+	}
+};
+
+class YellowTrait : public Box::ColorTrait
+{
+public:
+	std::unique_ptr<ColorTrait> Clone() const override
+	{
+		return std::make_unique<YellowTrait>();
+	}
+	Color GetColor() const override
+	{
+		return Colors::Yellow;
+	}
+};
+
+class WhiteTrait : public Box::ColorTrait
+{
+public:
+	std::unique_ptr<ColorTrait> Clone() const override
+	{
+		return std::make_unique<WhiteTrait>();
+	}
+	Color GetColor() const override
+	{
+		return Colors::White;
+	}
 };
