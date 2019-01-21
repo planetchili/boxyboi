@@ -3,12 +3,12 @@
 #include "Box.h"
 #include <functional>
 #include <unordered_map>
-#include <typeinfo>
+#include <typeindex>
 #include <type_traits>
 
 using TypePair = std::pair<
-	const std::type_info*,
-	const std::type_info*
+	const std::type_index,
+	const std::type_index
 >;
 
 namespace std
@@ -18,16 +18,8 @@ namespace std
 	{
 		size_t operator()( const TypePair& tp ) const
 		{
-			const auto hash0 = tp.first->hash_code();
-			return hash0 ^ (tp.second->hash_code() + 0x9e3779b9 + (hash0 << 6) + (hash0 >> 2));
-		}
-	};
-	template <>
-	struct equal_to<TypePair>
-	{
-		size_t operator()( const TypePair& lhs,const TypePair& rhs ) const
-		{
-			return *lhs.first == *rhs.first && *lhs.second == *rhs.second;
+			const auto hash0 = tp.first.hash_code();
+			return hash0 ^ (tp.second.hash_code() + 0x9e3779b9 + (hash0 << 6) + (hash0 >> 2));
 		}
 	};
 }
@@ -40,8 +32,8 @@ public:
 	{
 		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
 		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
-		handlers[{&typeid(T),&typeid(U)}] = f;
-		handlers[{&typeid(U),&typeid(T)}] = std::bind(
+		handlers[{typeid(T),typeid(U)}] = f;
+		handlers[{typeid(U),typeid(T)}] = std::bind(
 			f,std::placeholders::_2,std::placeholders::_1
 		);
 	}
@@ -50,15 +42,15 @@ public:
 	{
 		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
 		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
-		return handlers.count( { &typeid(T),&typeid(U) } ) > 0;
+		return handlers.count( { typeid(T),typeid(U) } ) > 0;
 	}
 	template<class T,class U>
 	void ClearCase()
 	{
 		static_assert(std::is_base_of<Box::ColorTrait,T>::value,"Template param type T must be derived from Box::ColorTrait!");
 		static_assert(std::is_base_of<Box::ColorTrait,U>::value,"Template param type U must be derived from Box::ColorTrait!");
-		handlers.erase( {&typeid(T),&typeid(U)} );
-		handlers.erase( {&typeid(U),&typeid(T)} );
+		handlers.erase( {typeid(T),typeid(U)} );
+		handlers.erase( {typeid(U),typeid(T)} );
 	}
 	template<class F>
 	void Default( F f )
@@ -81,8 +73,8 @@ private:
 	void Switch( Box& a,Box& b )
 	{
 		auto i = handlers.find( {
-			&typeid(a.GetColorTrait()),
-			&typeid(b.GetColorTrait())
+			typeid(a.GetColorTrait()),
+			typeid(b.GetColorTrait())
 		} );
 		if( i != handlers.end() )
 		{
