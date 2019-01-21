@@ -56,21 +56,22 @@ Game::Game( MainWindow& wnd )
 	public:
 		Listener()
 		{
-			umap[{typeid(YellowTrait), typeid(RedTrait)}] = [](Box* bptrA, Box* bptrB)
+			umap[{typeid(YellowTrait), typeid(RedTrait)}] = [](Box& bptrA, Box& bptrB)
 			{
-				bptrA->AddFlag((int)Effects::BOX_SPLIT);
+				bptrA.AddFlag((int)Effects::BOX_SPLIT);
 			};
-			umap[{typeid(WhiteTrait), typeid(BlueTrait)}] = [](Box* bptrA, Box* bptrB)
+			umap[{typeid(WhiteTrait), typeid(BlueTrait)}] = [](Box& bptrA, Box& bptrB)
 			{
-				bptrA->AddFlag((int)Effects::BOX_COLOR);
+				bptrA.AddFlag((int)Effects::BOX_COLOR);
 			};
-			umap[{typeid(GreenTrait), typeid(WhiteTrait)}] = [](Box* bptrA, Box* bptrB)
+			umap[{typeid(GreenTrait), typeid(WhiteTrait)}] = [](Box& bptrA, Box& bptrB)
 			{
-				bptrA->AddFlag((int)Effects::BOX_DESTROY);
+				bptrA.AddFlag((int)Effects::BOX_DESTROY);
 			};
 		}
 	private:
-		std::unordered_map <std::pair<std::type_index, std::type_index>, std::function<void(Box*, Box*)>, PairHash> umap;
+		std::unordered_map <std::pair<std::type_index, std::type_index>, std::function<void(Box&, Box&)>, PairHash> umap;
+
 	public:
 		void BeginContact( b2Contact* contact ) override
 		{
@@ -87,10 +88,19 @@ Game::Game( MainWindow& wnd )
 
 				std::stringstream msg;
 				msg << "Collision between " << tid0.name() << " and " << tid1.name() << std::endl;
+				OutputDebugStringA(msg.str().c_str());
 
-				umap[{typeid(boxPtrs[0]->GetColorTrait()), typeid(boxPtrs[1]->GetColorTrait())}](boxPtrs[0], boxPtrs[1]);
-
-				OutputDebugStringA( msg.str().c_str() );
+				std::pair<std::type_index, std::type_index> pairs[2] = { { typeid(boxPtrs[0]->GetColorTrait()), typeid(boxPtrs[1]->GetColorTrait()) },
+				{ typeid(boxPtrs[1]->GetColorTrait()), typeid(boxPtrs[0]->GetColorTrait()) } };
+				
+				for (auto& p : pairs)
+				{
+					auto i = umap.find(p);
+					if (i != umap.end())
+					{
+						umap[p](*boxPtrs[0], *boxPtrs[1]);
+					}
+				}
 				msg << "Flag set for boxPtrs[0] = " << boxPtrs[0]->GetFlags() << std::endl;
 				OutputDebugStringA(msg.str().c_str());
 			}
@@ -115,32 +125,33 @@ void Game::UpdateModel()
 
 	for (size_t i = 0; i < boxPtrs.size(); i++)
 	{
-		std::vector<std::unique_ptr<Box>>::iterator new_end;
-		switch (static_cast<Effects>(boxPtrs[i]->GetFlags()))
+		if (boxPtrs[i]->HasAnyFlag())
 		{
-		case Effects::BOX_DESTROY:
-			new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](std::unique_ptr<Box>& boxPtr)
+			std::vector<std::unique_ptr<Box>>::iterator new_end;
+			switch (static_cast<Effects>(boxPtrs[i]->GetFlags()))
 			{
-				return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
-			});
-			boxPtrs.erase(new_end, boxPtrs.end());
-			boxPtrs[i]->Reset();
-			break;
-		case Effects::BOX_COLOR:
-			boxPtrs[i]->SetColorTrait(std::make_unique<YellowTrait>());
-			boxPtrs[i]->Reset();
-			break;
-		case Effects::BOX_SPLIT:
-			if (boxPtrs[i]->GetSize() > 0.1f)
-			{
-				auto v = boxPtrs[i]->SpawnBoxy(boxPtrs[i]->GetWorld());
-				boxPtrs.insert(boxPtrs.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
+			case Effects::BOX_DESTROY:
+				new_end = std::remove_if(boxPtrs.begin(), boxPtrs.end(), [](std::unique_ptr<Box>& boxPtr)
+				{
+					return boxPtr->HasFlag((int)Effects::BOX_DESTROY);
+				});
+				boxPtrs.erase(new_end, boxPtrs.end());
+				break;
+			case Effects::BOX_COLOR:
+				boxPtrs[i]->SetColorTrait(std::make_unique<YellowTrait>());
+				break;
+			case Effects::BOX_SPLIT:
+				if (boxPtrs[i]->GetSize() > 0.1f)
+				{
+					auto v = boxPtrs[i]->SpawnBoxy(boxPtrs[i]->GetWorld());
+					boxPtrs.insert(boxPtrs.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
+					boxPtrs.erase(boxPtrs.begin() + i);
+				}
+				break;
+			default:
+				break;
 			}
 			boxPtrs[i]->Reset();
-			break;
-		default:
-			boxPtrs[i]->Reset();
-			break;
 		}
 	}
 }

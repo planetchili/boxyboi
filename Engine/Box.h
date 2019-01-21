@@ -121,17 +121,9 @@ public:
 	{
 		return flags;
 	}
-	void Collide()
-	{
-		hasCollided = true;
-	}
 	void Reset()
 	{
-		hasCollided = false;
-	}
-	bool HasCollided() const
-	{
-		return hasCollided;
+		flags = 0;
 	}
 private:
 	static void Init()
